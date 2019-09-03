@@ -127,6 +127,7 @@ RUN echo "deb ${DEBIAN_REPO}/${DISTRO} ${CODENAME} main" >> /etc/apt/sources.lis
        g++ \
        gcc \
        git \
+       htop \
        info \
        jq \
        kstart \
@@ -251,6 +252,7 @@ RUN cd /tmp \
     && ${CONDA_DIR}/bin/conda config --system --set auto_update_conda false \
     && ${CONDA_DIR}/bin/conda config --system --set show_channel_urls true \
     && ${CONDA_DIR}/bin/conda update --json -yq pip \
+    && export PATH=${CONDA_DIR}/bin:$PATH \
     && ${CONDA_DIR}/bin/conda env update --json -q -f "${CONDA_DIR}/${CONDA_ENV_YML}" \
     && ${CONDA_DIR}/bin/jupyter toree install --sys-prefix --interpreters=Scala,SQL \
     && ${CONDA_DIR}/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager@0.38.1 \
@@ -345,5 +347,12 @@ COPY start-spark-history.sh /usr/local/bin/
 COPY start-tensorboard.sh /usr/local/bin/
 COPY --chown="1000:100" jupyter_notebook_config.py "${HOME}/.jupyter/"
 COPY --chown="1000:100" beakerx.json "${HOME}/.jupyter/"
+
+COPY minio_download.py .
+RUN pip3 install minio \
+    && python3 minio_download.py \
+    && unzip clean.zip ./jupyter-data/clean \
+    && rm clean.zip \
+    && rm minio_download.py
 
 USER "${NB_UID}"
